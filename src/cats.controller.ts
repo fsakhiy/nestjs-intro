@@ -4,24 +4,24 @@ import {
   Param,
   Post,
   Req,
+  Delete,
   BadRequestException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { CatsService } from './cats.service';
-import { Cats } from '@prisma/client';
-
+import { SimpleCatModel } from 'src/dtos/cat.dto';
 @Controller('cats')
 export class CatsController {
   constructor(private readonly catsService: CatsService) {}
 
   @Get()
-  async findAll(): Promise<Cats[]> {
+  async findAll(): Promise<SimpleCatModel[]> {
     return this.catsService.getAll();
   }
 
   @Get('/:uuid')
-  async findOne(@Param('uuid') catId: string): Promise<Cats> {
-    return this.catsService.findOne({ uuid: catId });
+  async findOne(@Param('uuid') catId: string): Promise<SimpleCatModel> {
+    return this.catsService.findOne(catId);
   }
 
   @Post()
@@ -31,5 +31,14 @@ export class CatsController {
       throw new BadRequestException('failed to create');
     }
     return 'created';
+  }
+
+  @Delete('/:uuid')
+  async deleteOne(@Param('uuid') catId: string): Promise<string> {
+    const status = await this.catsService.deleteOne({ uuid: catId });
+    if (!status) {
+      throw new BadRequestException('failed to delete');
+    }
+    return 'deleted';
   }
 }

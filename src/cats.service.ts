@@ -2,14 +2,22 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 
 import { Request } from 'express';
 import { PrismaService } from './prisma.service';
-import { Prisma, Cats as CatModel } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { SimpleCatModel } from 'src/dtos/cat.dto';
 
 @Injectable()
 export class CatsService {
   constructor(private prisma: PrismaService) {}
 
-  async getAll(): Promise<CatModel[]> {
-    return this.prisma.cats.findMany();
+  async getAll(): Promise<SimpleCatModel[]> {
+    return this.prisma.cats.findMany({
+      select: {
+        uuid: true,
+        name: true,
+        breed: true,
+        birthDate: true,
+      },
+    });
   }
 
   async createOne(req: Request): Promise<boolean> {
@@ -32,9 +40,28 @@ export class CatsService {
     return true;
   }
 
-  async findOne(data: Prisma.CatsWhereUniqueInput): Promise<CatModel> {
-    return this.prisma.cats.findFirst({
-      where: data,
+  async findOne(catId: string): Promise<SimpleCatModel> {
+    return await this.prisma.cats.findFirst({
+      where: {
+        uuid: catId,
+      },
+      select: {
+        uuid: true,
+        name: true,
+        breed: true,
+        birthDate: true,
+      },
     });
+  }
+
+  async deleteOne(data: Prisma.CatsWhereUniqueInput): Promise<boolean> {
+    try {
+      await this.prisma.cats.delete({
+        where: data,
+      });
+    } catch (e) {
+      return false;
+    }
+    return true;
   }
 }
