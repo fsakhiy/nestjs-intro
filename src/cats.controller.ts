@@ -10,7 +10,6 @@ import {
 import { Request } from 'express';
 import { CatsService } from './cats.service';
 import { SimpleCatModel } from 'src/dtos/cat.dto';
-// import { Cats } from '@prisma/client';
 @Controller('cats')
 export class CatsController {
   constructor(private readonly catsService: CatsService) {}
