@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 import { Request } from 'express';
 import { PrismaService } from './prisma.service';
@@ -41,27 +46,57 @@ export class CatsService {
   }
 
   async findOne(catId: string): Promise<SimpleCatModel> {
-    return await this.prisma.cats.findFirst({
-      where: {
-        uuid: catId,
-      },
-      select: {
-        uuid: true,
-        name: true,
-        breed: true,
-        birthDate: true,
-      },
-    });
+    // return
+    let data: SimpleCatModel;
+    try {
+      data = await this.prisma.cats.findFirst({
+        where: {
+          uuid: catId,
+        },
+        select: {
+          uuid: true,
+          name: true,
+          breed: true,
+          birthDate: true,
+        },
+      });
+      if (!data) throw new NotFoundException('data not found');
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new InternalServerErrorException(e.message);
+      }
+      throw new NotFoundException('data not found');
+    }
+    return data;
   }
 
-  async deleteOne(data: Prisma.CatsWhereUniqueInput): Promise<boolean> {
+  async deleteOne(uuid: string): Promise<string> {
     try {
+      const cat = await this.prisma.cats.findFirst({
+        where: {
+          uuid: uuid,
+        },
+      });
+
+      if (!cat) {
+        throw new NotFoundException('data not found');
+      }
+
       await this.prisma.cats.delete({
-        where: data,
+        where: {
+          id: cat.id,
+        },
       });
     } catch (e) {
-      return false;
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        throw new InternalServerErrorException(e.message);
+      }
+      throw new InternalServerErrorException('cannot delete ' + e);
+      // return false;
     }
-    return true;
+
+    return 'data deleted';
+
+    // return await this.prisma.cats.delete(data);
   }
 }

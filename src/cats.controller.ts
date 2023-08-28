@@ -10,6 +10,7 @@ import {
 import { Request } from 'express';
 import { CatsService } from './cats.service';
 import { SimpleCatModel } from 'src/dtos/cat.dto';
+// import { Cats } from '@prisma/client';
 @Controller('cats')
 export class CatsController {
   constructor(private readonly catsService: CatsService) {}
@@ -35,10 +36,6 @@ export class CatsController {
 
   @Delete('/:uuid')
   async deleteOne(@Param('uuid') catId: string): Promise<string> {
-    const status = await this.catsService.deleteOne({ uuid: catId });
-    if (!status) {
-      throw new BadRequestException('failed to delete');
-    }
-    return 'deleted';
+    return this.catsService.deleteOne(catId);
   }
 }
